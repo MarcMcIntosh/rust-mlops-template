@@ -1,7 +1,7 @@
 // Add required imports
 extern crate wikipedia;
-use wikipedia::Wikipedia;
 use wikipedia::http::default::Client;
+use wikipedia::Wikipedia;
 
 use rust_bert::pipelines::summarization::SummarizationModel;
 
@@ -23,8 +23,7 @@ pub fn summarize_content(content: &str) -> String {
     let model = SummarizationModel::new(Default::default()).unwrap();
 
     // Remove the character limit
-    let input = content
-        .replace('\n', " ");
+    let input = content.replace('\n', " ");
 
     // Convert to a vector of strings
     let input = vec![input];
@@ -33,5 +32,8 @@ pub fn summarize_content(content: &str) -> String {
     let output = model.summarize(&input);
 
     // Check if there's a summary and return the first element of the vector
-    output.get(0).unwrap_or(&String::from("Error: Could not generate a summary.")).clone()
+    output
+        .get(0)
+        .unwrap_or(&String::from("Error: Could not generate a summary."))
+        .clone()
 }

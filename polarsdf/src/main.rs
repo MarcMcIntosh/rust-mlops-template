@@ -55,7 +55,7 @@ enum Commands {
         query: String,
         #[clap(long)]
         table: String,
-    }
+    },
 }
 
 fn main() {
@@ -86,30 +86,31 @@ fn main() {
         }) => {
             let df = polarsdf::read_csv(&path);
             let country_column_name = "Country Name";
-            // Exercise 1: Modify the Sort command to sort based on any given column name, not just "year". 
+            // Exercise 1: Modify the Sort command to sort based on any given column name, not just "year".
             // Test your implementation.
             let column_names = df.get_column_names();
             let sort_column = column != "year" && column_names.iter().any(|f| **f == column);
             let sort_by = if sort_column { column } else { year.clone() };
-            let columns =  match sort_column {
+            let columns = match sort_column {
                 true => Vec::from([country_column_name, &year, &sort_by]),
-                false => Vec::from([country_column_name, &year])
+                false => Vec::from([country_column_name, &year]),
             };
             //select the country column and the year string passed in and return a new dataframe
             let df2 = df.select(columns).unwrap();
             //drop any rows with null values and return a new dataframe
             let df2: DataFrame = df2.drop_nulls::<String>(None).unwrap();
             //sort the dataframe by the year column and by order passed in
-            let df2: DataFrame = df2.sort([&sort_by],  SortMultipleOptions::new().with_order_descending(order)).unwrap();
+            let df2: DataFrame = df2
+                .sort(
+                    [&sort_by],
+                    SortMultipleOptions::new().with_order_descending(order),
+                )
+                .unwrap();
 
             //print the first "rows" of the dataframe
             println!("{:?}", df2.head(Some(rows)));
         }
-        Some(Commands::Filter {
-            path,
-            query ,
-            table 
-        }) => {
+        Some(Commands::Filter { path, query, table }) => {
             // println!("{:?}", vec!([path, year, column, condition]));
             let mut cli = Cli::command();
             let df = polarsdf::read_csv(&path);

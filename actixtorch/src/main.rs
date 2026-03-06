@@ -30,14 +30,8 @@ async fn predictit() -> impl Responder {
 async fn main() -> std::io::Result<()> {
     //add a print message to the console that the service is running
     println!("Running the service");
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(predictit)
-
-    })
-    .bind("0.0.0.0:8080")?
-    .run()
-    .await
+    HttpServer::new(|| App::new().service(hello).service(predictit))
+        .bind("0.0.0.0:8080")?
+        .run()
+        .await
 }
-

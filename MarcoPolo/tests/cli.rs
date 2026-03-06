@@ -6,7 +6,6 @@ fn marco() {
     let mut cmd = Command::cargo_bin("marco_polo").unwrap();
     cmd.arg("play").arg("--name").arg("Marco");
     cmd.assert().success().stdout("Polo\n");
-
 }
 
 #[test]
@@ -16,4 +15,3 @@ fn polo() {
     cmd.arg("play").arg("--name").arg("Bob");
     cmd.assert().success().stdout("Marco\n");
 }
-

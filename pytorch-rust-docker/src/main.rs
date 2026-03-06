@@ -1,13 +1,11 @@
-/* Hello world Rust pytorch 
-Download pre-trained model here:  
+/* Hello world Rust pytorch
+Download pre-trained model here:
 https://github.com/LaurentMazare/tch-rs/releases/download/mw/resnet18.ot
 */
 
 use anyhow::{bail, Result};
 use tch::nn::ModuleT;
-use tch::vision::{
-    resnet, imagenet,
-};
+use tch::vision::{imagenet, resnet};
 
 pub fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
@@ -22,14 +20,15 @@ pub fn main() -> Result<()> {
     let mut vs = tch::nn::VarStore::new(tch::Device::Cpu);
     let net: Box<dyn ModuleT> = match weights.file_name().unwrap().to_str().unwrap() {
         "resnet18.ot" => Box::new(resnet::resnet18(&vs.root(), imagenet::CLASS_COUNT)),
-    
+
         _ => bail!("unknown model, use a weight file named e.g. resnet18.ot"),
     };
     vs.load(weights)?;
 
     // Apply the forward pass of the model to get the logits.
-    let output =
-        net.forward_t(&image.unsqueeze(0), /* train= */ false).softmax(-1, tch::Kind::Float); // Convert to probability.
+    let output = net
+        .forward_t(&image.unsqueeze(0), /* train= */ false)
+        .softmax(-1, tch::Kind::Float); // Convert to probability.
 
     // Print the top 5 categories for this image.
     for (probability, class) in imagenet::top(&output, 5).iter() {
@@ -37,5 +36,3 @@ pub fn main() -> Result<()> {
     }
     Ok(())
 }
-
-

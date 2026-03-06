@@ -56,7 +56,6 @@ async fn run_duplicate_search() -> Result<Vec<Vec<String>>, Error> {
     Ok(duplicates)
 }
 
-
 async fn function_handler(event: LambdaEvent<Request>) -> Result<Response, Error> {
     // Extract some useful info from the request
     let command = event.payload.command;
