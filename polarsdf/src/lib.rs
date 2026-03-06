@@ -4,7 +4,7 @@ use polars::prelude::*;
 
 //read in a csv file
 pub fn read_csv(path: &str) -> DataFrame {
-    CsvReader::from_path(path).unwrap().finish().unwrap()
+    LazyCsvReader::new(PlRefPath::new(path)).finish().unwrap().collect().unwrap()
 }
 
 //print "n" rows of a dataframe

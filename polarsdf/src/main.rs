@@ -1,5 +1,5 @@
 //command-line tool that reads a CSV file and prints the contents of the file as a DataFrame
-use clap::Parser;
+use clap::{CommandFactory, Parser};
 use polars::prelude::*;
 const CSV_FILE: &str = "src/data/global-life-expt-2022.csv";
 
@@ -45,7 +45,17 @@ enum Commands {
         rows: usize,
         #[clap(long, default_value = "true")]
         order: bool,
+        #[clap(long, default_value = "year")]
+        column: String,
     },
+    Filter {
+        #[clap(long, default_value = CSV_FILE)]
+        path: String,
+        #[clap(long)]
+        query: String,
+        #[clap(long)]
+        table: String,
+    }
 }
 
 fn main() {
@@ -72,20 +82,50 @@ fn main() {
             year,
             rows,
             order,
+            column,
         }) => {
             let df = polarsdf::read_csv(&path);
             let country_column_name = "Country Name";
+            // Exercise 1: Modify the Sort command to sort based on any given column name, not just "year". 
+            // Test your implementation.
+            let column_names = df.get_column_names();
+            let sort_column = column != "year" && column_names.iter().any(|f| **f == column);
+            let sort_by = if sort_column { column } else { year.clone() };
+            let columns =  match sort_column {
+                true => Vec::from([country_column_name, &year, &sort_by]),
+                false => Vec::from([country_column_name, &year])
+            };
             //select the country column and the year string passed in and return a new dataframe
-            let vs = df.select_series([country_column_name, &year]).unwrap();
-            //convert the Vec<Series> to a DataFrame
-            let df2 = DataFrame::new(vs).unwrap();
+            let df2 = df.select(columns).unwrap();
             //drop any rows with null values and return a new dataframe
-            let df2: DataFrame = df2.drop_nulls(None).unwrap();
+            let df2: DataFrame = df2.drop_nulls::<String>(None).unwrap();
             //sort the dataframe by the year column and by order passed in
-            let df2 = df2.sort([&year], order).unwrap();
+            let df2: DataFrame = df2.sort([&sort_by],  SortMultipleOptions::new().with_order_descending(order)).unwrap();
 
             //print the first "rows" of the dataframe
             println!("{:?}", df2.head(Some(rows)));
+        }
+        Some(Commands::Filter {
+            path,
+            query ,
+            table 
+        }) => {
+            // println!("{:?}", vec!([path, year, column, condition]));
+            let mut cli = Cli::command();
+            let df = polarsdf::read_csv(&path);
+            let mut sql = polars::sql::SQLContext::new();
+            sql.register(&table, df.lazy());
+            let res = sql.execute(&query);
+
+            match res {
+                Err(err) => {
+                    cli.error(clap::error::ErrorKind::Io, err);
+                }
+                Ok(lf) => {
+                    let results = lf.collect();
+                    println!("{:?}", results);
+                }
+            }
         }
         None => {
             println!("No subcommand was used");
